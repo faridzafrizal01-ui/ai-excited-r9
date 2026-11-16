@@ -1,23 +1,31 @@
-// Moon Loop — make.fun ai-excited-01 entry (r9).
-// Copies the entry artwork (entry.png, next to this file) into the
-// output directory, byte for byte. Deterministic: two runs produce
-// identical bytes.
+// Moon Loop — make.fun ai-excited-01 entry (r10).
+// Copies the entry artwork (entry.png, sitting beside this file) into
+// the output directory, byte for byte. Fully deterministic: running
+// this program twice writes identical bytes both times.
 
 import { copyFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const source = join(here, "entry.png");
-const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
+const sourcePath = join(here, "entry.png");
+const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
 
-if (!existsSync(source)) {
-  console.error(`entry.png not found next to main.ts (${source})`);
+if (!existsSync(sourcePath)) {
+  console.error(`entry.png not found next to main.ts (${sourcePath})`);
   process.exit(1);
 }
 
-mkdirSync(outDir, { recursive: true });
-const destination = join(outDir, "entry.png");
-copyFileSync(source, destination);
-const { size } = statSync(destination);
-console.log(`wrote ${destination} (${size} bytes)`);
+mkdirSync(outputDir, { recursive: true });
+const targetPath = join(outputDir, "entry.png");
+copyFileSync(sourcePath, targetPath);
+const copied = statSync(targetPath);
+const original = statSync(sourcePath);
+if (copied.size !== original.size) {
+  console.error(
+    `copy size mismatch: source ${original.size} bytes, wrote ${copied.size} bytes`,
+  );
+  process.exit(1);
+}
+const { size } = copied;
+console.log(`wrote ${targetPath} (${size} bytes)`);
